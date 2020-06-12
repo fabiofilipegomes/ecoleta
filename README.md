@@ -1,2 +1,2 @@
-# nlw1
-Next Level Week #1
+# Next Level Week #1
+Simple Typescript React Application
