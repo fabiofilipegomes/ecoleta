@@ -13,15 +13,10 @@ class CollectPointController {
         
         const serializedCollectPoints = collectPoints.map(collectPoint => {
 
-            collectPoint.items = items.filter(
+            const collectPointItems = items.filter(
                 item => item.collectPointId == collectPoint.collectPointId
-            ).map(item => {
-                return {
-                    itemId: item.itemId,
-                    title: item.title,
-                    image: item.image
-                }
-            });
+            ).map(item => item.itemId);
+            collectPoint.items = collectPointItems;
 
             return collectPoint;
         });
@@ -45,7 +40,7 @@ class CollectPointController {
             .select('items.itemId', 'items.title', 'items.image');
 
         const serializedCollectPoint = collectPoint;
-        serializedCollectPoint.items = items;
+        serializedCollectPoint.items = items.map(item => item.itemId);
     
         return response.json(serializedCollectPoint);
     }
@@ -74,13 +69,7 @@ class CollectPointController {
 
             collectPoint.items = items2.filter(
                 item => item.collectPointId == collectPoint.collectPointId
-            ).map(item => {
-                return {
-                    itemId: item.itemId,
-                    title: item.title,
-                    image: item.image
-                }
-            });
+            ).map(item => item.itemId);
 
             return collectPoint;
         });
@@ -119,7 +108,8 @@ class CollectPointController {
     
         return response.json({
             collectPointId: collectPointId,
-            ...collectPoint
+            ...collectPoint,
+            items: items
         });
     }
 }
