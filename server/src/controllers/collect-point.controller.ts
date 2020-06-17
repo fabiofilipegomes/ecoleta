@@ -54,8 +54,8 @@ class CollectPointController {
         const collectPoints = await knex('collectPoints')
             .innerJoin('collectPointItemRelations', 'collectPointItemRelations.collectPointId', 'collectPoints.collectPointId')
             .whereIn('collectPointItemRelations.itemId', parsedItems)
-            .where('collectPoints.city', String(city))
-            .where('collectPoints.zipcode', String(zipcode))
+            .where('collectPoints.city', 'like', `%${String(city)}%`)
+            .where('collectPoints.zipcode', 'like', `%${String(zipcode)}%`)
             .distinct()
             .select('collectPoints.*')
         

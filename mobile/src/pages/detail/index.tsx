@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Constants from 'expo-constants';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Feather as Icon, FontAwesome } from '@expo/vector-icons';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
+import  * as MailComposer from 'expo-mail-composer';
+
+interface Item {
+  itemId: number;
+  title: string;
+  image_url: string;
+}
 
 interface CollectPoint {
   collectPointId: number;
@@ -13,19 +20,36 @@ interface CollectPoint {
   whatsapp: string;
   latitude: number;
   longitude: number;
-  zity: string;
+  city: string;
   zipcode: string;
   items: number[]
+}
+
+interface Data {
+  collectPoint: CollectPoint;
+  collectPointItems: Item[];
 }
 
 const Detail = () => {
   const navigation = useNavigation();
   const route = useRoute();
-
-  const collectPoint: CollectPoint = route.params as CollectPoint;
+  console.log(route.params);
+  const { collectPoint, collectPointItems } = route.params as Data;
 
   function navigateBack (){
     navigation.goBack();
+  }
+
+  function whatsapp(){
+    Linking.openURL(`whatsapp://send?phone=${collectPoint.whatsapp}&text=Tenho interesse na coleta de resíduos.`);
+  }
+
+  function composeMail(){
+    Linking.openURL(`mailto:${collectPoint.email}?subject=Tenho interesse na coleta de resíduos.`);
+    /*MailComposer.composeAsync({
+      subject: 'Interesse na coleta de resíduos',
+      recipients: [collectPoint.email],
+    });*/
   }
 
   return (
@@ -36,20 +60,22 @@ const Detail = () => {
         </TouchableOpacity>
 
         <Image style={styles.pointImage} source={{uri:collectPoint.image}} />
-        <Text style={styles.pointName}>collectPoint.name</Text>
-        <Text style={styles.pointItems}>Lâmpada, Óleos</Text>
+        <Text style={styles.pointName}>{collectPoint.name}</Text>
+        <Text style={styles.pointItems}>{collectPointItems.map(item => item.title).join(', ')}</Text>
 
         <View style={styles.address}> 
           <Text style={styles.addressTitle}>Morada</Text>
-          <Text style={styles.addressContent}>asd</Text>
+          <Text style={styles.addressContent}>{collectPoint.city}, {collectPoint.zipcode} </Text>
         </View>
 
         <View style={styles.footer}>
-          <RectButton style={styles.button} onPress={() => {}}>
+          <RectButton style={styles.button} onPress={whatsapp}>
             <FontAwesome name="whatsapp" color="#fff" size={20} />
+            <Text style={styles.buttonText}>Whatsapp</Text>
           </RectButton>
-          <RectButton style={styles.button} onPress={() => {}}>
+          <RectButton style={styles.button} onPress={composeMail}>
             <Icon name="mail" color="#fff" size={20} />
+            <Text style={styles.buttonText}>E-mail</Text>
           </RectButton>
         </View>
       </View>

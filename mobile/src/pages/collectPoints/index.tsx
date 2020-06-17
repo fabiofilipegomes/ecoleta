@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Constants from 'expo-constants';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Feather as Icon } from '@expo/vector-icons';
 import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { SvgUri } from 'react-native-svg';
@@ -23,13 +23,19 @@ interface CollectPoint {
   whatsapp: string;
   latitude: number;
   longitude: number;
-  zity: string;
+  city: string;
   zipcode: string;
   items: number[]
 }
 
+interface Data {
+  collectPoint: CollectPoint;
+  collectPointItems: Item[];
+}
+
 const CollectPoints = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const [loadingInitialPosition, setLoadingInitialPosition] = useState(true);
   const [initialPosition, setInitialPosition] = useState({
     latitude: 41.1399589,
@@ -37,7 +43,9 @@ const CollectPoints = () => {
   });
   const [items, setItems] = useState<Item[]>([]);
   const [collectPoints, setCollectPoints] = useState<CollectPoint[]>([]);
+  const [filteredCollectPoints, setFilteredCollectPoints] = useState<CollectPoint[]>([]);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const { cityToFilter, zipcodeToFilter } = route.params as any;
 
   useEffect(() => {
     async function loadPosition() {
@@ -64,27 +72,37 @@ const CollectPoints = () => {
       const itemsResponse: any = await Api.get('items');
       setItems(itemsResponse.data);
       setSelectedItems(itemsResponse.data.map((item:any) => item.itemId));
-      Alert.alert(items[0].itemId.toString());
       Api.get('collectPoints', {
         params: {
-          city: 'Porto',
-          zipcode: '4430',
-          items: [1,2]
+          city: cityToFilter,
+          zipcode: zipcodeToFilter,
+          items: itemsResponse.data.map((item:any) => item.itemId)
         }
       }).then(response => {        
         setCollectPoints(response.data);
+        setFilteredCollectPoints(response.data);
       });
     }
 
     loadApiContent();
   }, []);
 
+  useEffect(() => {
+    setFilteredCollectPoints(collectPoints.filter(
+      collectPoint => collectPoint.items.some(cpItem => selectedItems.includes(cpItem))
+    ));
+  }, [selectedItems]);
+
   function navigateBack (){
     navigation.goBack();
   }
 
   function navigateToDetail(collectPoint: CollectPoint){
-    navigation.navigate('Detail', { collectPoint: collectPoint });
+    const data: Data = {
+      collectPoint: collectPoint,
+      collectPointItems: items.filter(item => collectPoint.items.includes(item.itemId))
+    };
+    navigation.navigate('Detail', data);
   }
 
   function selectItem(itemId: number){
@@ -121,7 +139,7 @@ const CollectPoints = () => {
                   longitudeDelta: 0.014
                 }}
               >
-                {collectPoints.map(collectPoint => (
+                {filteredCollectPoints.map(collectPoint => (
                   <Marker 
                     key={String(collectPoint.collectPointId)}
                     style={styles.mapMarker}
