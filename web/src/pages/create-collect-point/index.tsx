@@ -3,6 +3,7 @@ import { FiArrowLeft } from 'react-icons/fi';
 import { Link, useHistory } from 'react-router-dom';
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
 import { LeafletMouseEvent } from 'leaflet';
+import DropZone from '../../components/dropzone';
 import api from '../../services/api';
 
 import logo from '../../assets/logo.svg';
@@ -18,7 +19,7 @@ interface CollectPoint {
     name: string;
     email: string;
     whatsapp: string;
-    image: string;
+    image: File;
     latitude: number;
     longitude: number;
     city: string;
@@ -32,6 +33,7 @@ const CreateCollectPoint = () => {
     const [zoom, setZoom] = useState<number>(15);
 
     const [collectPointToCreate, setCollectPointToCreate] = useState<CollectPoint>(emptyCollectPoint());
+    const [selectedFile, setSelectedFile] = useState<File>();
 
     useEffect(() => {
         navigator.geolocation.getCurrentPosition(position => {
@@ -49,11 +51,18 @@ const CreateCollectPoint = () => {
         });
     }, []);
 
+    useEffect(() => {
+        setCollectPointToCreate({
+            ...collectPointToCreate,
+            image: selectedFile ? selectedFile : {} as File
+        });
+    }, [selectedFile]);
+
     function emptyCollectPoint(): CollectPoint{
         return ({name: '',
             email: '',
             whatsapp: '',
-            image: '',
+            image: {} as File,
             latitude: 41.1399589,
             longitude: -8.6116372,
             city: '',
@@ -102,7 +111,18 @@ const CreateCollectPoint = () => {
     function handleSubmit(event: FormEvent){
         event.preventDefault();
 
-        api.post('collectPoints', collectPointToCreate).then(response => {
+        const data = new FormData();
+        data.append('name', collectPointToCreate.name);
+        data.append('email', collectPointToCreate.email);
+        data.append('whatsapp', collectPointToCreate.whatsapp);
+        data.append('latitude', String(collectPointToCreate.latitude));
+        data.append('longitude', String(collectPointToCreate.longitude));
+        data.append('city', collectPointToCreate.city);
+        data.append('zipcode', collectPointToCreate.zipcode);
+        data.append('items', collectPointToCreate.items.join(','));
+        if(collectPointToCreate.image) data.append('image', collectPointToCreate.image);
+
+        api.post('collectPoints', data).then(response => {
             alert('Ponto de coleta criado com sucesso!');
             setCollectPointToCreate(emptyCollectPoint());
             history.push('/');
@@ -123,6 +143,8 @@ const CreateCollectPoint = () => {
             </header>
             <form onSubmit={handleSubmit}>
                 <h1>Registar <br/> ponto de coleta</h1>
+
+                <DropZone onFileUploaded={setSelectedFile} />
 
                 <fieldset>
                     <legend>

@@ -25,6 +25,7 @@ interface CollectPoint {
   longitude: number;
   city: string;
   zipcode: string;
+  image_url: string;
   items: number[]
 }
 
@@ -151,7 +152,7 @@ const CollectPoints = () => {
                   >
                     <View style={styles.mapMarkerContainer}>
                       <Image style={styles.mapMarkerImage}
-                        source={{uri:"https://images.unsplash.com/photo-1590698232141-f1ba62deb087?ixlib=rb-1.2.1&q=80&fm=jpg&crop=entropy&cs=tinysrgb&w=1080&fit=max"}} />
+                        source={{uri:collectPoint.image_url}} />
                       <Text style={styles.mapMarkerTitle}>{collectPoint.name}</Text>
                     </View>
                   </Marker>

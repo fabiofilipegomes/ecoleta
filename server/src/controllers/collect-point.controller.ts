@@ -12,7 +12,7 @@ class CollectPointController {
             .select('collectPoints.collectPointId', 'items.itemId', 'items.title', 'items.image');
         
         const serializedCollectPoints = collectPoints.map(collectPoint => {
-
+            collectPoint.image_url = `http://192.168.0.25:3333/assets/uploads/${collectPoint.image}`;
             const collectPointItems = items.filter(
                 item => item.collectPointId == collectPoint.collectPointId
             ).map(item => item.itemId);
@@ -40,6 +40,7 @@ class CollectPointController {
             .select('items.itemId', 'items.title', 'items.image');
 
         const serializedCollectPoint = collectPoint;
+        serializedCollectPoint.image_url = `http://192.168.0.25:3333/assets/uploads/${collectPoint.image}`;
         serializedCollectPoint.items = items.map(item => item.itemId);
     
         return response.json(serializedCollectPoint);
@@ -66,7 +67,7 @@ class CollectPointController {
             .whereIn('collectPoints.collectPointId', collectPoints.map(collectPoint => Number(collectPoint.collectPointId)));
         
         const serializedCollectPoints = collectPoints.map(collectPoint => {
-
+            collectPoint.image_url = `http://192.168.0.25:3333/assets/uploads/${collectPoint.image}`;
             collectPoint.items = items2.filter(
                 item => item.collectPointId == collectPoint.collectPointId
             ).map(item => item.itemId);
@@ -78,13 +79,13 @@ class CollectPointController {
     }
 
     async create(request: Request, response: Response) {
-        const { name, image, email, whatsapp, latitude, longitude, city, zipcode, items } = request.body;
+        const { name, email, whatsapp, latitude, longitude, city, zipcode, items } = request.body;
     
         const trx = await knex.transaction();
 
         const collectPoint = {
             name: name,
-            image: image,
+            image: request.file.filename,
             email: email,
             whatsapp: whatsapp,
             latitude: latitude,
@@ -95,13 +96,16 @@ class CollectPointController {
     
         const collectPointIds = await trx('collectPoints').insert(collectPoint);
         const collectPointId = collectPointIds[0];
-        const collectPointItemRelations = items.map((itemId: number) => {
-            return {
-                itemId: itemId,
-                collectPointId: collectPointId
-            };
-        });
-    
+        const collectPointItemRelations = items
+            .split(',')
+            .map((item: string) => Number(item.trim()))
+            .map((itemId: number) => {
+                return {
+                    itemId: itemId,
+                    collectPointId: collectPointId
+                };
+            });
+        
         await trx('collectPointItemRelations').insert(collectPointItemRelations);
 
         await trx.commit()
@@ -109,7 +113,8 @@ class CollectPointController {
         return response.json({
             collectPointId: collectPointId,
             ...collectPoint,
-            items: items
+            image_url: `http://192.168.0.25:3333/assets/uploads/${collectPoint.image}`,
+            items: collectPointItemRelations.map((item: any) => Number(item.itemId))
         });
     }
 }

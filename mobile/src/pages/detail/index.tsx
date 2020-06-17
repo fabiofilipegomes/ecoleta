@@ -22,6 +22,7 @@ interface CollectPoint {
   longitude: number;
   city: string;
   zipcode: string;
+  image_url: string;
   items: number[]
 }
 
@@ -59,7 +60,7 @@ const Detail = () => {
           <Icon name="arrow-left" size={20} color="#34cd79" />
         </TouchableOpacity>
 
-        <Image style={styles.pointImage} source={{uri:collectPoint.image}} />
+        <Image style={styles.pointImage} source={{uri:collectPoint.image_url}} />
         <Text style={styles.pointName}>{collectPoint.name}</Text>
         <Text style={styles.pointItems}>{collectPointItems.map(item => item.title).join(', ')}</Text>
 
